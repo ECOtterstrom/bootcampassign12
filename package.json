@@ -4,8 +4,10 @@
   "description": "Employee Management System",
   "main": "app.js",
   "dependencies": {
+    "console.table": "^0.10.0",
     "inquirer": "^7.1.0",
-    "mysql": "^2.18.1"
+    "mysql": "^2.18.1",
+    "print-message": "^3.0.1"
   },
   "devDependencies": {},
   "scripts": {
