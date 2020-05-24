@@ -1,7 +1,7 @@
 {
   "name": "employee_mgt_sys",
   "version": "1.0.0",
-  "description": "Employee Management System",
+  "description": "Employee Tracker",
   "main": "app.js",
   "dependencies": {
     "console.table": "^0.10.0",
