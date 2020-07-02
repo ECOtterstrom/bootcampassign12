@@ -130,7 +130,7 @@ function employeesDept() {
 
 function employeesMgr() {
     var query = connection.query(
-        "SELECT name as 'Department',first_name as 'First Name',last_name as 'Last Name',title as 'Role' FROM employee JOIN role ON role_id = roleId JOIN department ON department_id = deptId ORDER BY name",
+        "SELECT manager_id as 'Manager ID', first_name as 'Employee FN', last_name as 'Employee LN' from employee ORDER BY manager_id, last_name, first_name",
         function (err, data) {
             if (err) throw err;
             console.table(data);
@@ -165,44 +165,40 @@ function addEmployee() {
                 message: "Enter the last name:",
                 validate: validateString
             },
-            // {
-            //     type: "list",
-            //     name: "role",
-            //     message: "Select the role:",
-            //     choices: [...choices]
-            // },
             {
                 type: "list",
-                name: "employeeId",
+                name: "manager_id",
                 message: "Select the manager:",
                 choices: employeeChoices
             }
-        ]).then(function (data) {
-            console.log(data);
-            var arr = data.role.split(" ");
-            var roleID = parseInt(arr[0]);
-            var arr = data.department.split(" ");
-            var deptID = parseInt(arr[0]);
-            var query = connection.query(`INSERT INTO role (title, salary, department_id) VALUES ('${data.first_name}', '${data.last_name}', ${roleId}, ${deptId})`,
+        ]).then(function (firstValues) {
+            var query = connection.query(`SELECT * from role`,
                 function (err, data) {
                     if (err) throw err;
-                    continuePrompt();
+                    var roleChoices = data.map(function (role) {
+                        var roleChoice = {
+                            name: role.title,
+                            value: role.roleId
+                        }
+                        return roleChoice;
+                    })
+                    inquirer.prompt([
+                        {
+                            type: "list",
+                            name: "role_id",
+                            message: "Select the role:",
+                            choices: roleChoices
+                        },
+                    ]).then(function (answers) {
+                        var query = connection.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ('${firstValues.first_name}', '${firstValues.last_name}', ${answers.role_id}, ${firstValues.manager_id})`,
+                            function (err, data) {
+                                if (err) throw err;
+                                continuePrompt();
+                            });
+                    })
                 });
         });
-
-
-    })
-
-
-
-
-    /* const choices = [
-         {
-             name: 'Dope Engineer',
-             value: employeeId
-         }
-     ]*/
-
+    });
 };
 
 function updateRole() {
@@ -297,12 +293,12 @@ function updateEmployeeManager() {
 
 
 function addRole() {
-    var query = connection.query("SELECT id, department FROM department", function (err, data) {
+    var query = connection.query("SELECT deptId, name FROM department", function (err, data) {
         if (err) throw err;
         // let choices = data.map(x => `${x.id} - ${x.department}`);
         let choices = [];
         for (let i = 0; i < data.length; i++) {
-            choices.push(data[i].id + " - " + data[i].department);
+            choices.push(data[i].deptId + " - " + data[i].name);
         }
         inquirer.prompt([
             {
@@ -348,15 +344,14 @@ function addDepartment() {
     inquirer.prompt([
         {
             type: "input",
-            name: "department",
+            name: "name",
             message: "Enter the department's name:",
             validate: validateString
         }
     ]).then(function (data) {
-        var query = connection.query(`INSERT INTO department (department) 
-                    VALUES ('${data.department}');`, function (err, data) {
+        var query = connection.query(`INSERT INTO department (name) 
+                    VALUES ('${data.name}')`, function (err, data) {
             if (err) throw err;
-            return data;
             continuePrompt();
         });
     })
@@ -374,3 +369,4 @@ function viewDepartments() {
 }
 
 //runProgram();
+
